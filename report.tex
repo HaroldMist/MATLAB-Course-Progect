@@ -22,9 +22,7 @@
 \renewcommand{\abstractname}{}
 \newcommand{\upcite}[1]{\textsuperscript{\textsuperscript{\cite{#1}}}}
 
-% \title{系统动力学作业}
-% \author{\Large 糜宇 \ U202015178\\ \normalsize 人工智能2004班}
-% \date{}
+
 \usepackage[a4paper,left=25mm,right=25mm,top=20mm,bottom=20mm]{geometry}
 
 \lstset{
@@ -35,15 +33,18 @@ showstringspaces=false                % 不显示字符串中的空格
 
 \begin{document}
 
-	% \maketitle
-    
+
+    \tableofcontents
+    \newpage
+
+
     \section{题目}
     
-    \subsection*{森林救火问题}
+    \subsection{森林救火问题}
 
         森林失火了,消防站接到报警后派多少消防队员前去救火呢?派的队员越多,森林的损失越小,但是救援的开支会越大,所以需要综合考虑森林损失费和救援费与消防队员人数之间的关系,以总费用最小来决定派出队员的数目.
 
-    \subsubsection*{问题分析}
+    \subsubsection{问题分析}
         
         损失费通常正比于森林烧毁的面积,而烧毁面积与失火、灭火(指火被扑灭)的时间有关,灭火时间又取决于消防队员数目,队员越多灭火越快.救援费除与消防队员人数有关外,也与灭火时间长短有关.记失火时刻为$t=0$,开始救火时刻为$t=t_1$,灭火时刻为$t=t_2$.设在时刻$t$森林烧毁面积为$B(t)$ ,则造成损失的森林烧毁面积为$B(t_2)$.建模要对函数$B(t)$的形式作出合理的简单假设.
     
@@ -51,7 +52,7 @@ showstringspaces=false                % 不显示字符串中的空格
 
         救援费可分为两部分；一部分是灭火器材的消耗及消防队员的薪金等,与队员人数及灭火所用的时间均有关,另一部分是运送队员和器材等一次性支出,只与队员人数有关.
     
-    \subsubsection*{模型假设}
+    \subsubsection{模型假设}
         
         需要对烧毁森林的损失费、救援费及火势蔓延程度$\frac{dB}{dt}$的形式作出假设.
 
@@ -72,7 +73,7 @@ showstringspaces=false                % 不显示字符串中的空格
 
         第2条假设可作如下解释:火势以失火点为中心,以均匀速度向四周呈圆形蔓延.所以蔓延的半径$r$与时间$t$成正比,又因为烧毁面积$B$与$r^2$成正比,故$B$与$t^2$成正比,从而$\frac{dB}{dt}$与$t$成正比.
 
-    \subsubsection*{仿真要求}
+    \subsubsection{仿真要求}
         
         系统输入为派出消防队员$x$名,每个队员的平均灭火速度$\lambda$,火势蔓延速度$\beta$,开始救火时刻$t_1$,烧毁单位面积的损失费$c_1$,每个消防队员单位时间的费用$c_2$,每个队员的一次性支出$c_3$.系统输出为损失费和救援费以及总费用,灭火时刻$t_2$,森林烧毁面积$B$.要求有输入、输出界面及仿真过程.
         
@@ -83,8 +84,6 @@ showstringspaces=false                % 不显示字符串中的空格
     %     \caption{因果图}
     %     \label{1}
     % \end{figure}
-
-   
 
 
     \section{建模过程}

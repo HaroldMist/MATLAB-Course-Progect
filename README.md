@@ -6,7 +6,7 @@
 ## 森林救火问题仿真程序
 
 一个**MATLAB AppDesigner**小程序
-使用MATLAB 2022b编写，打开main.mlapp编辑和运行
+使用MATLAB R2022a编写，打开main.mlapp编辑和运行
 
 ### 原题目
 

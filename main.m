@@ -39,6 +39,9 @@ classdef main < matlab.apps.AppBase
         fighter            matlab.ui.control.Spinner
         Label              matlab.ui.control.Label
         RightPanel         matlab.ui.container.Panel
+        Label_31           matlab.ui.control.Label
+        Label_30           matlab.ui.control.Label
+        ForestLabel        matlab.ui.control.Label
         Label_28           matlab.ui.control.Label
         Label_27           matlab.ui.control.Label
         outputCostForest   matlab.ui.control.Label
@@ -73,6 +76,10 @@ classdef main < matlab.apps.AppBase
             beta = app.speedFire.Value;
             t_1 = app.timeBegin.Value;
 
+            cla(app.AxesBurned);
+            cla(app.AxesTotalCost);
+            cla(app.AxesForest);
+
             if lambda * X < beta 
                 fig = app.UIFigure;
                 message = {'灭火速度小于火势蔓延速度,无法灭火!', ...
@@ -92,8 +99,10 @@ classdef main < matlab.apps.AppBase
                 app.outputArea.Text = num2str(B,'%.2f') + "亩";
     
                 % calculate t_2, time required to put out fire 
+                % func_2, the area after t_1
                 func_2 = @(t) integral(@(t)(beta - lambda * X) * t,t_1,t) + B;
                 options = optimoptions('fsolve', 'TolFun', 1e-6, 'TolX', 1e-6);
+                % use fsolve to find solution, begin with t_1
                 t_2=fsolve(func_2,t_1,options);
     
                 app.outputTime.Text = num2str(t_2,'%.2f') + "小时";
@@ -118,7 +127,7 @@ classdef main < matlab.apps.AppBase
                 % axesForest
                 len = sqrt(B);
                 len = round(len/2);
-                lenLong = round(len * 2);
+                lenLong = round(len * 2.2);
                 axis(app.AxesForest,[-lenLong,lenLong,-lenLong,lenLong]);
                 x = [];
                 y = [];
@@ -129,6 +138,9 @@ classdef main < matlab.apps.AppBase
                 barGrow = mapGrow/5;
                 
                 %% before t_1
+                app.ForestLabel.Text = "火势扩大中";
+                app.ForestLabel.FontColor = '#DE0000';
+
                 clear X_1 Yburned_1;
                 count = 0;
                 for i = 0:0.02:t_1
@@ -139,12 +151,12 @@ classdef main < matlab.apps.AppBase
                     Yburned_1(count) = integral(@(t) beta * t,0,i);
                     Ycost_1(count) = c_1 * Yburned_1(count);
                     
-                    plot(app.AxesBurned,X_1,Yburned_1,'r');
-                    area(app.AxesBurned,X_1,Yburned_1,'FaceColor','b');
+                    plot(app.AxesBurned,X_1,Yburned_1,'Color','#4D4D4D','LineWidth',2);
+                    area(app.AxesBurned,X_1,Yburned_1,'FaceColor','#3399FF');
                     hold(app.AxesBurned,"on");
     
-                    plot(app.AxesTotalCost,X_1,Ycost_1,'r');
-                    area(app.AxesTotalCost,X_1,Ycost_1,'FaceColor','b');
+                    plot(app.AxesTotalCost,X_1,Ycost_1,'Color','#4D4D4D','LineWidth',2);
+                    area(app.AxesTotalCost,X_1,Ycost_1,'FaceColor','#EDB120');
                     hold(app.AxesTotalCost,"on");
                    
                     % plot the heatmap of fire
@@ -159,17 +171,20 @@ classdef main < matlab.apps.AppBase
 %                         239 88 17
 %                         125 6 4];
                     colormap(app.AxesForest,'turbo');
-%                     colorbar(app.AxesForest);
-                    clim(app.AxesForest,[i round(barGrow*sqrt(j^1.5))])
+                    axMax = round(barGrow*sqrt(j^1.5));
+                    clim(app.AxesForest,[0 axMax])
+                    colorbar(app.AxesForest,'Ticks',[0,axMax*0.4,axMax*0.6,axMax*0.9],...
+                        'TickLabels',{'未着火','微弱','中等','严重'});
                                  
                     pause(1/10);
                 end
                 
                 %% after t_1
+                app.ForestLabel.Text = "火势减小中";
+                app.ForestLabel.FontColor = '#0CF422';
 
                 clear X_2 Yburned_2;
                 count_2 = 0;
-
                 % num of fire deleted in one for loop
                 num = length(x)/((t_2-t_1)/0.02);
                 for i = t_1:0.02:t_2
@@ -178,12 +193,12 @@ classdef main < matlab.apps.AppBase
                     Yburned_2(count_2) = integral(@(t)(beta - lambda * X) * t,t_1,i) + B;
                     Ycost_2(count_2) = cost_1 + X * ((i-t_1)*c_2 + c_3);
                     
-                    plot(app.AxesBurned,X_2,Yburned_2,'r');
-                    area(app.AxesBurned,X_2,Yburned_2,'FaceColor','b');
+                    plot(app.AxesBurned,X_2,Yburned_2,'Color','#4D4D4D','LineWidth',2);
+                    area(app.AxesBurned,X_2,Yburned_2,'FaceColor','#3399FF');
                     hold(app.AxesBurned,"on");
     
-                    plot(app.AxesTotalCost,X_2,Ycost_2,'r');
-                    area(app.AxesTotalCost,X_2,Ycost_2,'FaceColor','b');
+                    plot(app.AxesTotalCost,X_2,Ycost_2,'Color','#4D4D4D','LineWidth',2);
+                    area(app.AxesTotalCost,X_2,Ycost_2,'FaceColor','#EDB120');
                     hold(app.AxesTotalCost,"on");
 
                     x = x(1:length(x)-num);
@@ -192,11 +207,18 @@ classdef main < matlab.apps.AppBase
                         'facecolor','flat', ...
                         'XBinLimits',[-lenLong lenLong],'YBinLimits',[-lenLong lenLong],'NumBins',2*lenLong);   
                     colormap(app.AxesForest,'turbo');
-%                     colorbar(app.AxesForest);
-                    clim(app.AxesForest,[i round(barGrow*sqrt(j^1.5))])
-                                 
+                    axMax = round(barGrow*sqrt(j^1.5));
+                    clim(app.AxesForest,[0 axMax])
+                    colorbar(app.AxesForest,'Ticks',[0,axMax*0.4,axMax*0.6,axMax*0.9],...
+                        'TickLabels',{'未着火','微弱','中等','严重'});
+                                                     
                     pause(1/10);
-                end            
+                end
+                hold(app.AxesBurned,"on");
+                hold(app.AxesTotalCost,"on");
+                hold(app.AxesForest,"on");
+                app.ForestLabel.Text = "火势已扑灭";
+                app.ForestLabel.FontColor = '#FFCF05';
             end
 
 
@@ -247,7 +269,7 @@ classdef main < matlab.apps.AppBase
             % Create LeftPanel
             app.LeftPanel = uipanel(app.GridLayout);
             app.LeftPanel.BorderType = 'none';
-            app.LeftPanel.BackgroundColor = [0.2118 0.2157 0.2392];
+            app.LeftPanel.BackgroundColor = [0.2118 0.2118 0.2118];
             app.LeftPanel.Layout.Row = 1;
             app.LeftPanel.Layout.Column = 1;
 
@@ -268,7 +290,7 @@ classdef main < matlab.apps.AppBase
             app.fighter.FontName = 'Microsoft YaHei UI';
             app.fighter.FontSize = 16;
             app.fighter.Position = [260 517 63 22];
-            app.fighter.Value = 14;
+            app.fighter.Value = 15;
 
             % Create xLabel
             app.xLabel = uilabel(app.LeftPanel);
@@ -368,7 +390,7 @@ classdef main < matlab.apps.AppBase
             app.timeBegin.Limits = [0 Inf];
             app.timeBegin.ValueDisplayFormat = '%.1f';
             app.timeBegin.Position = [260 400 60 22];
-            app.timeBegin.Value = 2.5;
+            app.timeBegin.Value = 1.7;
 
             % Create t_1Label
             app.t_1Label = uilabel(app.LeftPanel);
@@ -549,8 +571,13 @@ classdef main < matlab.apps.AppBase
             xlabel(app.AxesTotalCost, '时间')
             ylabel(app.AxesTotalCost, '元')
             zlabel(app.AxesTotalCost, 'Z')
+            app.AxesTotalCost.LabelFontSizeMultiplier = 1;
+            app.AxesTotalCost.FontName = 'Microsoft YaHei UI';
+            app.AxesTotalCost.LineWidth = 1;
+            app.AxesTotalCost.Color = [0.651 0.651 0.651];
+            app.AxesTotalCost.YGrid = 'on';
             app.AxesTotalCost.FontSize = 14;
-            app.AxesTotalCost.Position = [525 25 300 258];
+            app.AxesTotalCost.Position = [529 25 319 251];
 
             % Create AxesBurned
             app.AxesBurned = uiaxes(app.RightPanel);
@@ -558,15 +585,22 @@ classdef main < matlab.apps.AppBase
             xlabel(app.AxesBurned, '时间')
             ylabel(app.AxesBurned, '亩')
             zlabel(app.AxesBurned, 'Z')
+            app.AxesBurned.LabelFontSizeMultiplier = 1;
+            app.AxesBurned.FontName = 'Microsoft YaHei UI';
+            app.AxesBurned.LineWidth = 1;
+            app.AxesBurned.Color = [0.651 0.651 0.651];
+            app.AxesBurned.YGrid = 'on';
             app.AxesBurned.FontSize = 14;
-            app.AxesBurned.Position = [525 293 300 250];
+            app.AxesBurned.GridColor = [0.149 0.149 0.149];
+            app.AxesBurned.GridAlpha = 0.25;
+            app.AxesBurned.Position = [529 281 319 243];
 
             % Create AxesForest
             app.AxesForest = uiaxes(app.RightPanel);
-            xlabel(app.AxesForest, 'X')
-            ylabel(app.AxesForest, 'Y')
-            zlabel(app.AxesForest, 'Z')
-            app.AxesForest.Position = [31 25 481 491];
+            app.AxesForest.LineWidth = 2;
+            app.AxesForest.Color = [0.1882 0.0706 0.2314];
+            colormap(app.AxesForest, 'turbo')
+            app.AxesForest.Position = [10 25 512 475];
 
             % Create Label_11
             app.Label_11 = uilabel(app.RightPanel);
@@ -574,7 +608,7 @@ classdef main < matlab.apps.AppBase
             app.Label_11.FontSize = 20;
             app.Label_11.FontWeight = 'bold';
             app.Label_11.FontColor = [0.1882 0.1882 0.1882];
-            app.Label_11.Position = [45 607 105 26];
+            app.Label_11.Position = [60 607 105 26];
             app.Label_11.Text = '灭火时间：';
 
             % Create Label_12
@@ -583,7 +617,7 @@ classdef main < matlab.apps.AppBase
             app.Label_12.FontSize = 20;
             app.Label_12.FontWeight = 'bold';
             app.Label_12.FontColor = [0.1882 0.1882 0.1882];
-            app.Label_12.Position = [45 568 105 26];
+            app.Label_12.Position = [60 568 105 26];
             app.Label_12.Text = '烧毁面积：';
 
             % Create Label_13
@@ -619,8 +653,7 @@ classdef main < matlab.apps.AppBase
             app.outputTime.FontName = 'Microsoft YaHei UI';
             app.outputTime.FontSize = 20;
             app.outputTime.FontWeight = 'bold';
-            app.outputTime.FontColor = [0.1882 0.1882 0.1882];
-            app.outputTime.Position = [144 607 128 26];
+            app.outputTime.Position = [159 607 145 26];
             app.outputTime.Text = '';
 
             % Create outputArea
@@ -628,8 +661,7 @@ classdef main < matlab.apps.AppBase
             app.outputArea.FontName = 'Microsoft YaHei UI';
             app.outputArea.FontSize = 20;
             app.outputArea.FontWeight = 'bold';
-            app.outputArea.FontColor = [0.1882 0.1882 0.1882];
-            app.outputArea.Position = [144 568 128 26];
+            app.outputArea.Position = [159 568 145 26];
             app.outputArea.Text = '';
 
             % Create outputCostTotal
@@ -637,8 +669,7 @@ classdef main < matlab.apps.AppBase
             app.outputCostTotal.FontName = 'Microsoft YaHei UI';
             app.outputCostTotal.FontSize = 20;
             app.outputCostTotal.FontWeight = 'bold';
-            app.outputCostTotal.FontColor = [0.1882 0.1882 0.1882];
-            app.outputCostTotal.Position = [427 607 139 26];
+            app.outputCostTotal.Position = [427 607 164 26];
             app.outputCostTotal.Text = ' ';
 
             % Create outputCostFighter
@@ -646,8 +677,7 @@ classdef main < matlab.apps.AppBase
             app.outputCostFighter.FontName = 'Microsoft YaHei UI';
             app.outputCostFighter.FontSize = 20;
             app.outputCostFighter.FontWeight = 'bold';
-            app.outputCostFighter.FontColor = [0.1882 0.1882 0.1882];
-            app.outputCostFighter.Position = [410 568 139 26];
+            app.outputCostFighter.Position = [410 568 148 26];
             app.outputCostFighter.Text = '';
 
             % Create outputCostForest
@@ -655,8 +685,7 @@ classdef main < matlab.apps.AppBase
             app.outputCostForest.FontName = 'Microsoft YaHei UI';
             app.outputCostForest.FontSize = 20;
             app.outputCostForest.FontWeight = 'bold';
-            app.outputCostForest.FontColor = [0.1882 0.1882 0.1882];
-            app.outputCostForest.Position = [660 568 139 26];
+            app.outputCostForest.Position = [660 568 154 26];
             app.outputCostForest.Text = '';
 
             % Create Label_27
@@ -665,18 +694,43 @@ classdef main < matlab.apps.AppBase
             app.Label_27.FontSize = 24;
             app.Label_27.FontWeight = 'bold';
             app.Label_27.FontColor = [0.1882 0.1882 0.1882];
-            app.Label_27.Position = [45 645 156 31];
+            app.Label_27.Position = [80 645 156 31];
             app.Label_27.Text = '仿真预测结果:';
 
             % Create Label_28
             app.Label_28 = uilabel(app.RightPanel);
             app.Label_28.HorizontalAlignment = 'center';
             app.Label_28.FontName = 'Microsoft YaHei UI';
-            app.Label_28.FontSize = 20;
+            app.Label_28.FontSize = 22;
             app.Label_28.FontWeight = 'bold';
             app.Label_28.FontColor = [0.1882 0.1882 0.1882];
-            app.Label_28.Position = [237 520 85 26];
-            app.Label_28.Text = '森林模拟';
+            app.Label_28.Position = [78 502 144 29];
+            app.Label_28.Text = '森林实时火情:';
+
+            % Create ForestLabel
+            app.ForestLabel = uilabel(app.RightPanel);
+            app.ForestLabel.FontName = 'Microsoft YaHei UI';
+            app.ForestLabel.FontSize = 22;
+            app.ForestLabel.FontWeight = 'bold';
+            app.ForestLabel.FontColor = [0.1882 0.1882 0.1882];
+            app.ForestLabel.Position = [226 502 132 29];
+            app.ForestLabel.Text = '';
+
+            % Create Label_30
+            app.Label_30 = uilabel(app.RightPanel);
+            app.Label_30.HorizontalAlignment = 'center';
+            app.Label_30.FontName = 'Segoe UI Emoji';
+            app.Label_30.FontSize = 30;
+            app.Label_30.Position = [36 500 35 41];
+            app.Label_30.Text = '🌳';
+
+            % Create Label_31
+            app.Label_31 = uilabel(app.RightPanel);
+            app.Label_31.HorizontalAlignment = 'center';
+            app.Label_31.FontName = 'Segoe UI Emoji';
+            app.Label_31.FontSize = 30;
+            app.Label_31.Position = [34 645 47 41];
+            app.Label_31.Text = '⏲️';
 
             % Show the figure after all components are created
             app.UIFigure.Visible = 'on';

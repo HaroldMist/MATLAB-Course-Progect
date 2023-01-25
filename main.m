@@ -127,7 +127,7 @@ classdef main < matlab.apps.AppBase
                 % axesForest
                 len = sqrt(B);
                 len = round(len/2);
-                lenLong = round(len * 2.2);
+                lenLong = round(len * 2.5);
                 axis(app.AxesForest,[-lenLong,lenLong,-lenLong,lenLong]);
                 x = [];
                 y = [];
@@ -140,6 +140,12 @@ classdef main < matlab.apps.AppBase
                 %% before t_1
                 app.ForestLabel.Text = "火势扩大中";
                 app.ForestLabel.FontColor = '#DE0000';
+%                     map = [59 46 126
+%                         25 226 187
+%                         223 223 55
+%                         239 88 17
+%                         125 6 4];
+                colormap(app.AxesForest,'turbo');
 
                 clear X_1 Yburned_1;
                 count = 0;
@@ -165,13 +171,8 @@ classdef main < matlab.apps.AppBase
                     h = histogram2(app.AxesForest,x,y,'DisplayStyle','tile','ShowEmptyBins','on', ...
                         'facecolor','flat', ...
                         'XBinLimits',[-lenLong lenLong],'YBinLimits',[-lenLong lenLong],'NumBins',2*lenLong); 
-%                     map = [59 46 126
-%                         25 226 187
-%                         223 223 55
-%                         239 88 17
-%                         125 6 4];
-                    colormap(app.AxesForest,'turbo');
-                    axMax = round(barGrow*sqrt(j^1.5));
+
+                    axMax = round(barGrow*sqrt(j));
                     clim(app.AxesForest,[0 axMax])
                     colorbar(app.AxesForest,'Ticks',[0,axMax*0.4,axMax*0.6,axMax*0.9],...
                         'TickLabels',{'未着火','微弱','中等','严重'});
@@ -186,7 +187,7 @@ classdef main < matlab.apps.AppBase
                 clear X_2 Yburned_2;
                 count_2 = 0;
                 % num of fire deleted in one for loop
-                num = length(x)/((t_2-t_1)/0.02);
+                num = round(length(x)/((t_2-t_1)/0.02));
                 for i = t_1:0.02:t_2
                     count_2 = count_2 + 1;
                     X_2(count_2) = count_2 * 0.02 + t_1;
@@ -206,19 +207,30 @@ classdef main < matlab.apps.AppBase
                     h = histogram2(app.AxesForest,x,y,'DisplayStyle','tile','ShowEmptyBins','on', ...
                         'facecolor','flat', ...
                         'XBinLimits',[-lenLong lenLong],'YBinLimits',[-lenLong lenLong],'NumBins',2*lenLong);   
-                    colormap(app.AxesForest,'turbo');
-                    axMax = round(barGrow*sqrt(j^1.5));
+
+                    j = j - j/((t_2-t_1)/0.02)*0.15;
+                    axMax = round(barGrow*sqrt(j));
                     clim(app.AxesForest,[0 axMax])
                     colorbar(app.AxesForest,'Ticks',[0,axMax*0.4,axMax*0.6,axMax*0.9],...
                         'TickLabels',{'未着火','微弱','中等','严重'});
                                                      
                     pause(1/10);
                 end
+                x = [];
+                y = [];
+                h = histogram2(app.AxesForest,x,y,'DisplayStyle','tile','ShowEmptyBins','on', ...
+                        'facecolor','flat', ...
+                        'XBinLimits',[-lenLong lenLong],'YBinLimits',[-lenLong lenLong],'NumBins',2*lenLong);
                 hold(app.AxesBurned,"on");
                 hold(app.AxesTotalCost,"on");
                 hold(app.AxesForest,"on");
                 app.ForestLabel.Text = "火势已扑灭";
                 app.ForestLabel.FontColor = '#FFCF05';
+
+                fig = app.UIFigure;
+                message = {'仿真结束!', ...
+                    '点击开始仿真可以进行下一次仿真'};
+                uialert(fig,message,'成功','Icon','success');
             end
 
 
@@ -269,7 +281,7 @@ classdef main < matlab.apps.AppBase
             % Create LeftPanel
             app.LeftPanel = uipanel(app.GridLayout);
             app.LeftPanel.BorderType = 'none';
-            app.LeftPanel.BackgroundColor = [0.2118 0.2118 0.2118];
+            app.LeftPanel.BackgroundColor = [0.1804 0.1804 0.1804];
             app.LeftPanel.Layout.Row = 1;
             app.LeftPanel.Layout.Column = 1;
 
@@ -387,7 +399,7 @@ classdef main < matlab.apps.AppBase
 
             % Create timeBegin
             app.timeBegin = uieditfield(app.LeftPanel, 'numeric');
-            app.timeBegin.Limits = [0 Inf];
+            app.timeBegin.Limits = [0.01 Inf];
             app.timeBegin.ValueDisplayFormat = '%.1f';
             app.timeBegin.Position = [260 400 60 22];
             app.timeBegin.Value = 1.7;
@@ -597,7 +609,7 @@ classdef main < matlab.apps.AppBase
 
             % Create AxesForest
             app.AxesForest = uiaxes(app.RightPanel);
-            app.AxesForest.LineWidth = 2;
+            app.AxesForest.LineWidth = 1;
             app.AxesForest.Color = [0.1882 0.0706 0.2314];
             colormap(app.AxesForest, 'turbo')
             app.AxesForest.Position = [10 25 512 475];
@@ -694,7 +706,7 @@ classdef main < matlab.apps.AppBase
             app.Label_27.FontSize = 24;
             app.Label_27.FontWeight = 'bold';
             app.Label_27.FontColor = [0.1882 0.1882 0.1882];
-            app.Label_27.Position = [80 645 156 31];
+            app.Label_27.Position = [80 646 156 31];
             app.Label_27.Text = '仿真预测结果:';
 
             % Create Label_28
